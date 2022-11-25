@@ -1,0 +1,43 @@
+---
+- hosts: webservers 
+  tasks:
+    - name: Requirementide install
+      apt: pkg={{item}} update_cache=yes cache_valid_time=86400 state=present
+      with_items:
+      - python-mysqldb
+      - mysql-server
+      - apache2
+      - php
+      - php-cgi
+      - php-mysqli
+      - php-pear
+      - php-mbstring
+      - php-gettext
+      - libapache2-mod-php
+      - php-common
+      - php-phpseclib
+      - php-mysql
+
+    - name: Mysql serveri alustamine
+      service: name=mysql state=started
+
+    - name: Root konto parooli nime ja privileegide conf
+      mysql_user: name=root host={{ item }} password=rootpass priv=*.*:ALL,GRANT
+      with_items:
+      - "{{ inventory_hostname }}"
+      - 127.0.0.1
+      - ::1
+      - localhost
+
+    - name: pma kausta tegemine
+      file:
+       path: /var/www/html/phpmyadmin
+       state: directory
+       mode: 7777
+       owner: root 
+       group: root
+
+    - name: pma install 
+      get_url:
+       url: https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-all-languages.tar.gz
+       dest: /var/www/html/phpmyadmin
